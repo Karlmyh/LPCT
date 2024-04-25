@@ -320,10 +320,21 @@ class LDPTreeClassifier(BaseRecursiveTree):
     
     def fit(self, X, y):
 
-        self.get_partition(self.X_Q, self.y_Q, self.range_x)
-        self.attribute_data(X,y)
         if self.if_prune:
-            self.pruning(self.y_Q.shape[0] + y.shape[0])
+            self.epsilon = self.epsilon / 2
+            self.get_partition(self.X_Q, self.y_Q, self.range_x)
+            self.attribute_data(X,y)
+            flag = self.pruning(self.y_Q.shape[0] + y.shape[0])
+
+            if flag:
+                self.max_depth = self.min_depth
+                self.get_partition(self.X_Q, self.y_Q, self.range_x)
+                self.attribute_data(X,y)
+        else:
+            self.get_partition(X, y, self.range_x)
+            self.attribute_data(X,y)
+
+
        
         return self
     

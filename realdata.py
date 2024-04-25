@@ -27,16 +27,16 @@ args = parser.parse_args()
 
 data_file_dir = "./data/clean/"
 data_file_name_seq = [
-"anonymity",
-"census",
-"diabetes",
-"election",
-"email",
-"employ",
-"employee",
-"jobs",
-"rice",
-"landcover",
+# "anonymity",
+# "census",
+# "diabetes",
+# "election",
+# "email",
+# "employ",
+# "employee",
+# "jobs",
+# "rice",
+# "landcover",
 "taxidata",
 ]
 repeat_times = 50
@@ -324,7 +324,145 @@ def base_train_LPCT_prune_V(iterate, epsilon, dataname):
                                                                 )
             f.writelines(logs)
 
+def base_train_LPCT_prune_new(iterate, epsilon, dataname):
 
+    pub_file_name = "{}_pub.csv".format(dataname)
+    path = os.path.join(data_file_dir, pub_file_name)
+    data = pd.read_csv(path, header=None)
+    data = np.array(data, dtype = "float")
+    X_Q = data[:,1:]
+    y_Q = data[:,0]
+
+    scalar = MinMaxScaler()
+    X_Q = scalar.fit_transform(X_Q)
+
+    pri_file_name = "{}_pri.csv".format(dataname)
+    path = os.path.join(data_file_dir, pri_file_name)
+    data = pd.read_csv(path, header=None)
+    data = np.array(data, dtype = "float")
+    X = data[:,1:]
+    y = data[:,0]
+    X = scalar.transform(X)
+    X_P, X_test, y_P, y_test = train_test_split(X, y, test_size = 0.2, random_state = iterate)
+
+
+    # set constant
+    n_P = X_P.shape[0]
+    n_Q = X_Q.shape[0]
+    n_test = X_test.shape[0]
+    d = X_P.shape[1]
+
+    # LPCT
+    method = "LPCT-Prune-new"
+    param_dict =   {"min_samples_split":[1],
+                    "min_samples_leaf":[1, 5],
+                    "if_prune": [1],
+                "X_Q":[X_Q],
+                "y_Q": [y_Q],
+                "epsilon": [epsilon],
+                "splitter": ['igmaxedge'],
+                "estimator":["laplace"],
+            }
+    for param_values in product(*param_dict.values()):
+        params = dict(zip(param_dict.keys(), param_values))
+
+        time_start = time.time()
+        model = LDPTreeClassifier(**params).fit(X_P, y_P)
+        y_hat = model.predict(X_test)
+        eta_hat = model.predict_proba(X_test)
+        accuracy = (y_hat == y_test).mean()
+        bce = - log_loss(y_test, eta_hat)
+        time_end = time.time()
+        time_used = time_end - time_start
+
+        log_file_name = "{}.csv".format(method)
+        log_file_path = os.path.join(log_file_dir, log_file_name)
+        with open(log_file_path, "a") as f:
+            logs= "{},{},{},{},{},{},{:6f},{:6f},{:6f},{},{},{}\n".format(dataname,
+                                                                method,
+                                                                iterate,
+                                                                epsilon,
+                                                                n_P,
+                                                                n_Q, 
+                                                                accuracy,
+                                                                bce,
+                                                                time_used,
+                                                                0,
+                                                                params["min_samples_leaf"],
+                                                                0,
+                                                                )
+            f.writelines(logs)
+
+
+def base_train_LPCT_prune_V_new(iterate, epsilon, dataname):
+
+    pub_file_name = "{}_pub.csv".format(dataname)
+    path = os.path.join(data_file_dir, pub_file_name)
+    data = pd.read_csv(path, header=None)
+    data = np.array(data, dtype = "float")
+    X_Q = data[:,1:]
+    y_Q = data[:,0]
+
+    scalar = MinMaxScaler()
+    X_Q = scalar.fit_transform(X_Q)
+
+    pri_file_name = "{}_pri.csv".format(dataname)
+    path = os.path.join(data_file_dir, pri_file_name)
+    data = pd.read_csv(path, header=None)
+    data = np.array(data, dtype = "float")
+    X = data[:,1:]
+    y = data[:,0]
+    X = scalar.transform(X)
+    X_P, X_test, y_P, y_test = train_test_split(X, y, test_size = 0.2, random_state = iterate)
+
+
+    # set constant
+    n_P = X_P.shape[0]
+    n_Q = X_Q.shape[0]
+    n_test = X_test.shape[0]
+    d = X_P.shape[1]
+
+    # LPCT
+    method = "LPCT-Prune-V-new"
+    param_dict =   {"min_samples_split":[1],
+                    "min_samples_leaf":[1, 5],
+                    "if_prune": [1],
+                "X_Q":[X_Q],
+                "y_Q": [y_Q],
+                "epsilon": [epsilon],
+                "splitter": ['igreduction'],
+                "estimator":["laplace"],
+            }
+    for param_values in product(*param_dict.values()):
+        params = dict(zip(param_dict.keys(), param_values))
+        
+
+        time_start = time.time()
+        model = LDPTreeClassifier(**params).fit(X_P, y_P)
+        y_hat = model.predict(X_test)
+        eta_hat = model.predict_proba(X_test)
+        accuracy = (y_hat == y_test).mean()
+        bce = - log_loss(y_test, eta_hat)
+        time_end = time.time()
+        time_used = time_end - time_start
+
+        log_file_name = "{}.csv".format(method)
+        log_file_path = os.path.join(log_file_dir, log_file_name)
+        with open(log_file_path, "a") as f:
+            logs= "{},{},{},{},{},{},{:6f},{:6f},{:6f},{},{},{}\n".format(dataname,
+                                                                method,
+                                                                iterate,
+                                                                epsilon,
+                                                                n_P,
+                                                                n_Q, 
+                                                                accuracy,
+                                                                bce,
+                                                                time_used,
+                                                                0,
+                                                                params["min_samples_leaf"],
+                                                                0,
+                                                                )
+            f.writelines(logs)
 
 def base_train_LPCT_original(iterate, epsilon, dataname):
 
@@ -842,8 +980,8 @@ def base_train_CT_pub(iterate, epsilon, dataname):
 
     
 if __name__ == "__main__":
-    num_repetitions = 20
-    num_jobs = 20
+    num_repetitions = 2
+    num_jobs = 2
 
     
     for epsilon in [ 0.5, 1, 2, 4, 8, 1000]: 
@@ -873,6 +1011,18 @@ if __name__ == "__main__":
             elif args.method == "CT":
                 Parallel(n_jobs = num_jobs)(delayed(base_train_CT)(i, epsilon, data_name) for i in range(num_repetitions))
             elif args.method == "CT_pub":
+                Parallel(n_jobs = num_jobs)(delayed(base_train_CT_pub)(i, epsilon, data_name) for i in range(num_repetitions))
+            elif args.method == "all":
+                Parallel(n_jobs = num_jobs)(delayed(base_train_LPCT_M)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_LPCT_V)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_LPCT_prune)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_LPCT_prune_V)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_LPCT_original)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_PHIST)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_PGLM)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_PSGD_L)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_PSGD_N)(i, epsilon, data_name) for i in range(num_repetitions))
+                Parallel(n_jobs = num_jobs)(delayed(base_train_CT)(i, epsilon, data_name) for i in range(num_repetitions))
                 Parallel(n_jobs = num_jobs)(delayed(base_train_CT_pub)(i, epsilon, data_name) for i in range(num_repetitions))
             else:
                 raise ValueError("No such method")

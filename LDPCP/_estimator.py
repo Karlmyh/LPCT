@@ -93,6 +93,7 @@ class ClassificationEstimator(object):
         if self.lamda is not None:
             self.eta = (self.V_P + self.lamda * self.V_Q) / (self.U_P + self.lamda * self.U_Q)
             r = c2**0.5 * (u + self.lamda**2 * self.U_Q)**0.5   / (self.U_P + self.lamda * self.U_Q)
+#             print("lamda set", self.eta, r )
         else:
             if self.U_Q == 0:
                 self.eta = 1 / 2
@@ -104,12 +105,15 @@ class ClassificationEstimator(object):
             if self.U_P <= 0 or self.V_P <= 0:
                 self.eta = self.V_Q / self.U_Q
                 r =  c2q**0.5 / self.U_Q**0.5  
+#                 print("UP or VP less than 0")
             else:
                 truncated_V_P = self.V_P
                 if self.V_P > self.U_P:
                     signal_P = 1 / 2
                     truncated_V_P = self.U_P
+#                     print("truncated from above")
                 elif 0 <= self.V_P / self.U_P <= 1:
+#                     print("compare p and np", u, self.U_P)
                     if u > self.U_P:
                         self.eta = self.V_Q / self.U_Q
                         r =  c2q**0.5 / self.U_Q**0.5  
@@ -119,6 +123,7 @@ class ClassificationEstimator(object):
                         u = self.U_P
                 else:
                     raise ValueError
+                    
                 
                 if signal_P * signal_Q > 0:
                     self.lamda = u  / self.U_P * signal_Q / signal_P
@@ -127,18 +132,28 @@ class ClassificationEstimator(object):
                     if np.abs(self.eta - 0.5) / r < np.abs(self.V_Q / self.U_Q - 1/2) /  c2q**0.5 * self.U_Q**0.5:
                         self.eta = self.V_Q / self.U_Q
                         r =  c2q**0.5 / self.U_Q**0.5  
+#                     print("same sign", self.eta, r )
                 else:
                     test_statistic_P = np.abs(truncated_V_P / self.U_P - 1/2) / c2**0.5 / u**0.5 * self.U_P
                     test_statistic_Q = np.abs(self.V_Q / self.U_Q - 1/2) /  c2q**0.5 * self.U_Q**0.5
                     if test_statistic_P < test_statistic_Q:
                         self.eta = self.V_Q /  self.U_Q
                         r =  c2q**0.5 / self.U_Q**0.5 
+#                         print("different sign Q strong", self.eta , r )
                     else:
                         self.eta = truncated_V_P / self.U_P
                         r = c2**0.5 * u**0.5 / self.U_P
+#                         print("different sign P strong", self.eta , r )
+                
+     
         
         self.y_hat = (self.eta > 1 / 2).astype(int)
+#         print("final statistics", np.abs(self.eta - 0.5) / r)
         return np.abs(self.eta - 0.5) / r
+    
+   
+        
+
     
     
     def predict(self, test_X):
@@ -182,6 +197,8 @@ class AncestorNodePruningEstimator(ClassificationEstimator):
      
     Attributes
     ----------
+    
+    
     U_P: list
     
     V_P: list
@@ -189,6 +206,8 @@ class AncestorNodePruningEstimator(ClassificationEstimator):
     U_Q: list
     
     V_Q: list
+    
+   
 
     """
     def __init__(self,

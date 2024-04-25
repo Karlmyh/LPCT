@@ -30,7 +30,7 @@ def base_train(iterate, epsilon, n_train, n_pub, distribution_index):
 
 
     ################################################################################################        
-    method = "LDPTC-M"
+    method = "LDPTC-M-new"
     param_dict =   {"min_samples_split":[1],
                     "min_samples_leaf":[1, 5],
                     "if_prune": [1],

@@ -312,7 +312,9 @@ class RecursiveTreeBuilder(object):
                     if depth >= self.max_depth or n_node_unique_samples <= self.min_samples_split:
                         is_leaf = True
                     else:
+    #                     print("At depth {}".format(depth))
                         rd_dim_vec, rd_split_vec = self.splitter(dt_X, node_range , dt_Y )
+    #                     print(rd_dim_vec, rd_split_vec)
                         is_leaf = True
                         for idx_rd_dim in range(len(rd_dim_vec)):
                             rd_dim = rd_dim_vec[idx_rd_dim]
@@ -379,6 +381,7 @@ class RecursiveTreeBuilder(object):
         
     def prune(self, tree, n_all):
         tree.allnode_fun = deepcopy(tree.leafnode_fun)
+        flag = 0
         
         for node_idx in list(tree.leafnode_fun.keys()):
         
@@ -386,11 +389,13 @@ class RecursiveTreeBuilder(object):
             test_statistic_dic = {}
 
             # initialization 
+#             print("################################### initialization idx", current_idx)
             test_statistic_dic[current_idx] = tree.allnode_fun[current_idx].test_statistic() 
             ############################################################
             # test leaf node; if pass, remain leaf node func, if not, continue
             if test_statistic_dic[current_idx] >= 1:
                 tree.leafnode_fun[node_idx] = tree.allnode_fun.get(current_idx)
+#                 print("################################### pass test in initial node", current_idx)
                 continue
 
             ancestor_depth = 0
@@ -415,23 +420,34 @@ class RecursiveTreeBuilder(object):
                     tree.allnode_fun[current_idx] = node_fun
 
                 # add test statistic to test_statistic_dic, if parent node is already specified, this step is not necessary
+#                 print("##### pruned idx", current_idx)
                 test_statistic_dic[current_idx] = tree.allnode_fun.get(current_idx).test_statistic() 
                 #########################################################
 
                 # if parent node; if pass, replace leaf node func, if not, continue
                 if test_statistic_dic[current_idx] >= 1:
+#                     print("pass test on ancestor node with depth {}".format(ancestor_depth))
                     tree.leafnode_fun[node_idx] = tree.allnode_fun.get(current_idx)
                     if_terminated = 1
+#                     print("################################### succeed in pruning with node", current_idx)
                     break
                 elif ancestor_depth >= self.max_depth - self.min_depth:
+#                     print("################################### reach min depth", current_idx)
+                    flag = 1
                     break
                 else: 
                     pass
                 
             if not if_terminated:
+            # return max test statistic
+                
                 max_statistic_idx = max(test_statistic_dic, key= lambda x: test_statistic_dic[x])
                 tree.leafnode_fun[node_idx] = tree.allnode_fun.get(max_statistic_idx)
-      
+#                 print("################################### failed in pruning with node", max_statistic_idx)
+#                 print("pass test on final selection")
+
+        return flag
+                
             
  
         

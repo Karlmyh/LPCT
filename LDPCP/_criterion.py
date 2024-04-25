@@ -3,8 +3,7 @@ from numba import njit
 
 @njit
 def entropy(y):
-    """
-    Sample entropy.
+    """In sample sum of squares.
     """
     if len(y)>0:
         p = np.mean(y)
@@ -20,7 +19,7 @@ def entropy(y):
 
 @njit
 def infogain(X, dt_Y, d, split):
-    """Compute gini decrease for one pair of dimension and split point.
+    """Compute MSE decrease for one pair of dimension and split point.
 
     Parameters
     ----------

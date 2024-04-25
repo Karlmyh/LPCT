@@ -8,4 +8,4 @@ python simulation_lamda.py
 python simulation_depth.py
 python simulation_partition.py
 python simulation_range_parameter.py
-python realdata.py
+python realdata.py -method all
